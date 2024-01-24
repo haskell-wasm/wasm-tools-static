@@ -1,0 +1,119 @@
+name: build
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  linux:
+    name: linux-${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - amd64
+          - arm64
+    steps:
+
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: install-deps
+        run: |
+          sudo apt update
+          sudo apt install -y \
+            qemu-user-static
+
+      - name: build-image
+        run: |
+          pushd "$(mktemp -d)"
+          curl -f -L --retry 5 https://github.com/tweag/rust-alpine-mimalloc/archive/refs/heads/master.tar.gz | tar xz --strip-components=1
+          podman build \
+            --arch ${{ matrix.arch }} \
+            --network host \
+            --pull \
+            --squash \
+            --tag rust:alpine-mimalloc \
+            .
+          popd
+
+      - name: build
+        run: |
+          podman run \
+            --arch ${{ matrix.arch }} \
+            --init \
+            --network host \
+            --rm \
+            --tmpfs /tmp:exec \
+            --volume $PWD:/workspace \
+            --workdir /workspace \
+            rust:alpine-mimalloc \
+            ./build.sh
+
+          MIMALLOC_VERBOSE=1 ./bin/wasm-tools --version
+          MIMALLOC_VERBOSE=1 ./bin/wasmtime --version
+          MIMALLOC_VERBOSE=1 ./bin/wizer --version
+
+          file ./bin/wasm-tools
+          file ./bin/wasmtime
+          file ./bin/wizer
+
+          mkdir wasm-tools-${{ github.ref_name }}-linux-${{ matrix.arch }}
+          mv bin wasm-tools-${{ github.ref_name }}-linux-${{ matrix.arch }}
+          tar \
+            --sort=name \
+            --mtime=1970-01-01T00:00:00Z \
+            --owner=0 --group=0 --numeric-owner \
+            --use-compress-program="zstd --ultra -22 --threads=0" \
+            -cf wasm-tools-${{ github.ref_name }}-linux-${{ matrix.arch }}.tar.zst \
+            wasm-tools-${{ github.ref_name }}-linux-${{ matrix.arch }}
+
+      - name: upload-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-tools-${{ github.ref_name }}-linux-${{ matrix.arch }}
+          path: wasm-tools-${{ github.ref_name }}-linux-${{ matrix.arch }}.tar.zst
+
+  darwin:
+    name: darwin-${{ matrix.arch }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - x86_64
+          - aarch64
+    steps:
+
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: install-deps
+        run: |
+          rustup target add ${{ matrix.arch }}-apple-darwin
+
+      - name: build
+        run: |
+          ./build.sh --target ${{ matrix.arch }}-apple-darwin
+
+          file ./bin/wasm-tools
+          file ./bin/wasmtime
+          file ./bin/wizer
+
+          mkdir wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}
+          mv bin wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}
+          gtar \
+            --sort=name \
+            --mtime=1970-01-01T00:00:00Z \
+            --owner=0 --group=0 --numeric-owner \
+            --use-compress-program="zstd --ultra -22 --threads=0" \
+            -cf wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}.tar.zst \
+            wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}
+
+      - name: upload-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}
+          path: wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}.tar.zst
