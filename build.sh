@@ -7,7 +7,15 @@ cargo install \
   --config 'profile.release.lto = "thin"' \
   --config 'profile.release.strip = "symbols"' \
   --root "$PWD" \
-  wasm-tools wizer ${1+"$@"}
+  --git https://github.com/type-dance/wizer.git \
+  wizer ${1+"$@"}
+
+cargo install \
+  --all-features \
+  --config 'profile.release.lto = "thin"' \
+  --config 'profile.release.strip = "symbols"' \
+  --root "$PWD" \
+  wasm-tools wit-bindgen-cli ${1+"$@"}
 
 cargo install \
   --all-features \

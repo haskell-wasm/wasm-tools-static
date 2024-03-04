@@ -36,7 +36,7 @@ jobs:
             --arch ${{ matrix.arch }} \
             --network host \
             --pull \
-            --squash \
+            --squash-all \
             --tag rust:alpine-mimalloc \
             .
           popd
@@ -56,10 +56,12 @@ jobs:
 
           MIMALLOC_VERBOSE=1 ./bin/wasm-tools --version
           MIMALLOC_VERBOSE=1 ./bin/wasmtime --version
+          MIMALLOC_VERBOSE=1 ./bin/wit-bindgen --version
           MIMALLOC_VERBOSE=1 ./bin/wizer --version
 
           file ./bin/wasm-tools
           file ./bin/wasmtime
+          file ./bin/wit-bindgen
           file ./bin/wizer
 
           mkdir wasm-tools-${{ github.ref_name }}-linux-${{ matrix.arch }}
@@ -102,6 +104,7 @@ jobs:
 
           file ./bin/wasm-tools
           file ./bin/wasmtime
+          file ./bin/wit-bindgen
           file ./bin/wizer
 
           mkdir wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}
@@ -146,7 +149,14 @@ jobs:
             --all-features `
             --root wasm-tools-${{ github.ref_name }}-windows-${{ matrix.arch }} `
             --target ${{ matrix.arch }}-pc-windows-msvc `
-            wasm-tools wizer wasmtime-cli
+            --git https://github.com/type-dance/wizer.git `
+            wizer
+
+          cargo install `
+            --all-features `
+            --root wasm-tools-${{ github.ref_name }}-windows-${{ matrix.arch }} `
+            --target ${{ matrix.arch }}-pc-windows-msvc `
+            wasm-tools wit-bindgen-cli wasmtime-cli
 
       - name: upload-artifact
         uses: actions/upload-artifact@v4
