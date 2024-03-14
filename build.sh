@@ -15,7 +15,7 @@ cargo install \
   --config 'profile.release.lto = "thin"' \
   --config 'profile.release.strip = "symbols"' \
   --root "$PWD" \
-  wasm-tools wit-bindgen-cli ${1+"$@"}
+  wasm-component-ld wasm-tools wit-bindgen-cli ${1+"$@"}
 
 cargo install \
   --all-features \
