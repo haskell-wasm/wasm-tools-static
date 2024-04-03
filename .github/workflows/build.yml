@@ -54,7 +54,6 @@ jobs:
             rust:alpine-mimalloc \
             sh -c 'TARGET=$(rustc -vV | sed -n "s|host: ||p") && exec ./build.sh --target $TARGET'
 
-          MIMALLOC_VERBOSE=1 ./bin/wasm-component-ld --help
           MIMALLOC_VERBOSE=1 ./bin/wasm-tools --version
           MIMALLOC_VERBOSE=1 ./bin/wasmtime --version
           MIMALLOC_VERBOSE=1 ./bin/wit-bindgen --version
