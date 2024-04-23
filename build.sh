@@ -18,7 +18,7 @@ cargo install \
   wasm-component-ld wasm-tools wit-bindgen-cli ${1+"$@"}
 
 cargo install \
-  --all-features \
+  --features winch \
   --config 'profile.release.lto = "thin"' \
   --root "$PWD" \
   wasmtime-cli ${1+"$@"}
