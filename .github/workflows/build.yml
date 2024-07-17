@@ -27,19 +27,6 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
 
-      - name: build-image
-        run: |
-          pushd "$(mktemp -d)"
-          curl -f -L --retry 5 https://github.com/tweag/rust-alpine-mimalloc/archive/refs/heads/master.tar.gz | tar xz --strip-components=1
-          podman build \
-            --arch ${{ matrix.arch }} \
-            --network host \
-            --pull \
-            --squash-all \
-            --tag rust:alpine-mimalloc \
-            .
-          popd
-
       - name: build
         run: |
           podman run \
@@ -51,14 +38,14 @@ jobs:
             --tmpfs /tmp:exec \
             --volume $PWD:/workspace \
             --workdir /workspace \
-            rust:alpine-mimalloc \
-            sh -c 'TARGET=$(rustc -vV | sed -n "s|host: ||p") && exec ./build.sh --target $TARGET'
+            chimeralinux/chimera \
+            sh -c 'apk add cargo libatomic-chimera-devel-static libcxx-devel-static musl-devel-static && TARGET=$(rustc -vV | sed -n "s|host: ||p") && exec ./build.sh --target $TARGET'
 
-          MIMALLOC_VERBOSE=1 ./bin/wasm-component-ld --help
-          MIMALLOC_VERBOSE=1 ./bin/wasm-tools --version
-          MIMALLOC_VERBOSE=1 ./bin/wasmtime --version
-          MIMALLOC_VERBOSE=1 ./bin/wit-bindgen --version
-          MIMALLOC_VERBOSE=1 ./bin/wizer --version
+          ./bin/wasm-component-ld --help
+          ./bin/wasm-tools --version
+          ./bin/wasmtime --version
+          ./bin/wit-bindgen --version
+          ./bin/wizer --version
 
           file ./bin/wasm-component-ld
           file ./bin/wasm-tools
