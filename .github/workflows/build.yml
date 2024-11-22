@@ -8,82 +8,48 @@ on:
   workflow_dispatch:
 
 jobs:
-  linux:
+  x86_64-linux:
     name: linux-${{ matrix.arch }}
-    runs-on: ubuntu-24.04
+    runs-on:
+      - X64
+      - Linux
+      - podman
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - arch: amd64
-            sys: x86_64-linux
-          - arch: arm64/v8
-            sys: aarch64-linux
+        arch:
+          - x86_64
     steps:
-
-      - name: setup-podman
-        uses: TerrorJack/setup-podman@master
-
       - name: checkout
         uses: actions/checkout@v4
 
-      - name: build-image
-        run: |
-          pushd "$(mktemp -d)"
-          curl -f -L --retry 5 https://github.com/tweag/rust-alpine-mimalloc/archive/refs/heads/master.tar.gz | tar xz --strip-components=1
-          podman build \
-            --arch ${{ matrix.arch }} \
-            --network host \
-            --pull \
-            --squash-all \
-            --tag rust:alpine-mimalloc \
-            .
-          popd
+      - name: build-linux
+        uses: ./.github/actions/linux
 
-      - name: build
-        run: |
-          podman run \
-            --arch ${{ matrix.arch }} \
-            --env RUSTFLAGS="-C target-feature=+crt-static" \
-            --init \
-            --network host \
-            --rm \
-            --tmpfs /tmp:exec \
-            --volume $PWD:/workspace \
-            --workdir /workspace \
-            rust:alpine-mimalloc \
-            sh -c 'TARGET=$(rustc -vV | sed -n "s|host: ||p") && exec ./build.sh --target $TARGET'
+  aarch64-linux:
+    name: linux-${{ matrix.arch }}
+    runs-on:
+      - ARM64
+      - Linux
+      - podman
+    strategy:
+      fail-fast: false
+      matrix:
+        arch:
+          - aarch64
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
 
-          MIMALLOC_VERBOSE=1 ./bin/wasm-component-ld --help
-          MIMALLOC_VERBOSE=1 ./bin/wasm-tools --version
-          MIMALLOC_VERBOSE=1 ./bin/wasmtime --version
-          MIMALLOC_VERBOSE=1 ./bin/wit-bindgen --version
-          MIMALLOC_VERBOSE=1 ./bin/wizer --version
-
-          file ./bin/wasm-component-ld
-          file ./bin/wasm-tools
-          file ./bin/wasmtime
-          file ./bin/wit-bindgen
-          file ./bin/wizer
-
-          mkdir wasm-tools-${{ github.ref_name }}-${{ matrix.sys }}
-          mv bin wasm-tools-${{ github.ref_name }}-${{ matrix.sys }}
-          tar \
-            --sort=name \
-            --owner=0 --group=0 --numeric-owner \
-            --use-compress-program="zstd --ultra -22 --threads=0" \
-            -cf wasm-tools-${{ github.ref_name }}-${{ matrix.sys }}.tar.zst \
-            wasm-tools-${{ github.ref_name }}-${{ matrix.sys }}
-
-      - name: upload-artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: wasm-tools-${{ github.ref_name }}-${{ matrix.sys }}
-          path: wasm-tools-${{ github.ref_name }}-${{ matrix.sys }}.tar.zst
+      - name: build-linux
+        uses: ./.github/actions/linux
 
   darwin:
     name: darwin-${{ matrix.arch }}
-    runs-on: macos-latest
+    runs-on:
+      - ARM64
+      - macOS
+      - asdf
     strategy:
       fail-fast: false
       matrix:
@@ -91,7 +57,6 @@ jobs:
           - x86_64
           - aarch64
     steps:
-
       - name: checkout
         uses: actions/checkout@v4
 
@@ -111,9 +76,7 @@ jobs:
 
           mkdir wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}
           mv bin wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}
-          gtar \
-            --sort=name \
-            --owner=0 --group=0 --numeric-owner \
+          tar \
             --use-compress-program="zstd --ultra -22 --threads=0" \
             -cf wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}.tar.zst \
             wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}
@@ -126,15 +89,16 @@ jobs:
 
   windows:
     name: windows-${{ matrix.arch }}
-    runs-on: windows-latest
+    runs-on:
+      - X64
+      - Windows
+      - asdf
     strategy:
       fail-fast: false
       matrix:
         arch:
           - x86_64
-          - aarch64
     steps:
-
       - name: checkout
         uses: actions/checkout@v4
 
@@ -150,7 +114,7 @@ jobs:
             --all-features `
             --root wasm-tools-${{ github.ref_name }}-windows-${{ matrix.arch }} `
             --target ${{ matrix.arch }}-pc-windows-msvc `
-            --git https://github.com/TerrorJack/wizer.git `
+            --git https://github.com/haskell-wasm/wizer.git `
             wizer
 
           cargo install `
