@@ -8,41 +8,76 @@ on:
   workflow_dispatch:
 
 jobs:
-  x86_64-linux:
-    name: linux-${{ matrix.arch }}
+  linux:
+    name: ${{ matrix.arch }}-linux
     runs-on:
-      - X64
+      - ${{ matrix.runner_tag }}
       - Linux
       - podman
     strategy:
-      fail-fast: false
       matrix:
-        arch:
-          - x86_64
+        include:
+          - arch: x86_64
+            runner_tag: X64
+          - arch: aarch64
+            runner_tag: ARM64
     steps:
       - name: checkout
         uses: actions/checkout@v4
 
-      - name: build-linux
-        uses: ./.github/actions/linux
+      - name: build-image
+        run: |
+          podman rmi --ignore rust:alpine-mimalloc
 
-  aarch64-linux:
-    name: linux-${{ matrix.arch }}
-    runs-on:
-      - ARM64
-      - Linux
-      - podman
-    strategy:
-      fail-fast: false
-      matrix:
-        arch:
-          - aarch64
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
+          pushd "$(mktemp -d)"
+          curl -f -L --retry 5 https://github.com/tweag/rust-alpine-mimalloc/archive/refs/heads/master.tar.gz | tar xz --strip-components=1
+          podman build \
+            --network host \
+            --pull \
+            --squash-all \
+            --tag rust:alpine-mimalloc \
+            .
+          popd
 
-      - name: build-linux
-        uses: ./.github/actions/linux
+      - name: build
+        run: |
+          podman run \
+            --env RUSTFLAGS="-C target-feature=+crt-static" \
+            --init \
+            --network host \
+            --rm \
+            --tmpfs /tmp:exec \
+            --volume $PWD:/workspace \
+            --workdir /workspace \
+            rust:alpine-mimalloc \
+            sh -c 'TARGET=$(rustc -vV | sed -n "s|host: ||p") && exec ./build.sh --target $TARGET'
+
+          MIMALLOC_VERBOSE=1 ./bin/wasm-component-ld --help
+          MIMALLOC_VERBOSE=1 ./bin/wasm-tools --version
+          MIMALLOC_VERBOSE=1 ./bin/wasmtime --version
+          MIMALLOC_VERBOSE=1 ./bin/wit-bindgen --version
+          MIMALLOC_VERBOSE=1 ./bin/wizer --version
+
+          file ./bin/wasm-component-ld
+          file ./bin/wasm-tools
+          file ./bin/wasmtime
+          file ./bin/wit-bindgen
+          file ./bin/wizer
+
+          mkdir wasm-tools-${{ github.ref_name }}-${{ matrix.arch }}-linux
+          mv bin wasm-tools-${{ github.ref_name }}-${{ matrix.arch }}-linux
+          tar \
+            --sort=name \
+            --owner=0 --group=0 --numeric-owner \
+            --use-compress-program="zstd --ultra -22 --threads=0" \
+            -cf wasm-tools-${{ github.ref_name }}-${{ matrix.arch }}-linux.tar.zst \
+            wasm-tools-${{ github.ref_name }}-${{ matrix.arch }}-linux
+
+      - name: upload-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-tools-${{ github.ref_name }}-${{ matrix.arch }}-linux
+          path: wasm-tools-${{ github.ref_name }}-${{ matrix.arch }}-linux.tar.zst
 
   darwin:
     name: darwin-${{ matrix.arch }}
@@ -50,7 +85,6 @@ jobs:
       - ARM64
       - macOS
     strategy:
-      fail-fast: false
       matrix:
         arch:
           - x86_64
@@ -61,6 +95,7 @@ jobs:
 
       - name: install-deps
         run: |
+          rustup update
           rustup target add ${{ matrix.arch }}-apple-darwin
 
       - name: build
@@ -92,7 +127,6 @@ jobs:
       - X64
       - Windows
     strategy:
-      fail-fast: false
       matrix:
         arch:
           - x86_64
@@ -102,6 +136,7 @@ jobs:
 
       - name: install-deps
         run: |
+          rustup update
           rustup target add ${{ matrix.arch }}-pc-windows-msvc
 
       - name: build
