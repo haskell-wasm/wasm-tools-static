@@ -14,6 +14,7 @@ jobs:
       - ${{ matrix.runner_tag }}
       - Linux
       - podman
+      - WIP
     strategy:
       matrix:
         include:
@@ -84,6 +85,7 @@ jobs:
     runs-on:
       - ARM64
       - macOS
+      - WIP
     strategy:
       matrix:
         arch:
@@ -151,10 +153,15 @@ jobs:
             wizer
 
           cargo install `
+            --root wasm-tools-${{ github.ref_name }}-windows-${{ matrix.arch }} `
+            --target ${{ matrix.arch }}-pc-windows-msvc `
+            wasm-tools
+
+          cargo install `
             --all-features `
             --root wasm-tools-${{ github.ref_name }}-windows-${{ matrix.arch }} `
             --target ${{ matrix.arch }}-pc-windows-msvc `
-            wasmtime-cli wasm-component-ld wasm-tools wit-bindgen-cli
+            wasmtime-cli wasm-component-ld wit-bindgen-cli
 
       - name: upload-artifact
         uses: actions/upload-artifact@v4
