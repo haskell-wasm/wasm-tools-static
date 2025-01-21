@@ -42,7 +42,6 @@ jobs:
       - name: build
         run: |
           podman run \
-            --env RUSTFLAGS="-C target-feature=+crt-static" \
             --init \
             --network host \
             --rm \
