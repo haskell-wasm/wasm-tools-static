@@ -27,8 +27,6 @@ jobs:
 
       - name: build-image
         run: |
-          podman rmi --ignore rust:alpine-mimalloc
-
           pushd "$(mktemp -d)"
           curl -f -L --retry 5 https://github.com/tweag/rust-alpine-mimalloc/archive/refs/heads/master.tar.gz | tar xz --strip-components=1
           podman build \
@@ -50,6 +48,8 @@ jobs:
             --workdir /workspace \
             rust:alpine-mimalloc \
             sh -c 'TARGET=$(rustc -vV | sed -n "s|host: ||p") && exec ./build.sh --target $TARGET'
+
+          podman rmi rust:alpine-mimalloc
 
           MIMALLOC_VERBOSE=1 ./bin/wasm-component-ld --help
           MIMALLOC_VERBOSE=1 ./bin/wasm-tools --version
