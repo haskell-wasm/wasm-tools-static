@@ -146,7 +146,7 @@ jobs:
             --all-features `
             --root wasm-tools-${{ github.ref_name }}-windows-${{ matrix.arch }} `
             --target ${{ matrix.arch }}-pc-windows-msvc `
-            --git https://github.com/haskell-wasm/wizer.git `
+            --git https://github.com/bytecodealliance/wizer.git `
             wizer
 
           cargo install `

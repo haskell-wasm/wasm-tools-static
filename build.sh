@@ -7,7 +7,7 @@ cargo install \
   --config 'profile.release.lto = "thin"' \
   --config 'profile.release.strip = "symbols"' \
   --root "$PWD" \
-  --git https://github.com/haskell-wasm/wizer.git \
+  --git https://github.com/bytecodealliance/wizer.git \
   wizer ${1+"$@"}
 
 cargo install \
