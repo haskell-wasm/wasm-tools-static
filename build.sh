@@ -3,14 +3,6 @@
 set -eu
 
 cargo install \
-  --all-features \
-  --config 'profile.release.lto = "thin"' \
-  --config 'profile.release.strip = "symbols"' \
-  --root "$PWD" \
-  --git https://github.com/bytecodealliance/wizer.git \
-  wizer ${1+"$@"}
-
-cargo install \
   --config 'profile.release.lto = "thin"' \
   --config 'profile.release.strip = "symbols"' \
   --root "$PWD" \
@@ -21,7 +13,7 @@ cargo install \
   --config 'profile.release.lto = "thin"' \
   --config 'profile.release.strip = "symbols"' \
   --root "$PWD" \
-  wasm-component-ld wasmi_cli wit-bindgen-cli ${1+"$@"}
+  wasm-component-ld wasmi_cli wit-bindgen-cli wizer ${1+"$@"}
 
 cargo install \
   --all-features \
