@@ -3,9 +3,9 @@
 Static builds of `wasm-tools`, `wasmtime-cli`, `wizer` for
 {x86_64,aarch64}-{linux,darwin,windows}:
 
-- `wasm-component-ld`: `v0.5.15`
-- `wasm-tools`: `v1.237.0`
-- `wasmi_cli`: `v0.51.0`
-- `wasmtime-cli`: `v36.0.1`
-- `wit-bindgen-cli`: `v0.44.0`
-- `wizer`: `v9.0.0`
+- `wasm-component-ld`: `v0.5.17`
+- `wasm-tools`: `v1.239.0`
+- `wasmi_cli`: `v0.51.1`
+- `wasmtime-cli`: `v37.0.0`
+- `wit-bindgen-cli`: `v0.46.0`
+- `wizer`: `v10.0.0`
