@@ -23,7 +23,7 @@ jobs:
             runner_tag: ARM64
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: build-image
         run: |
@@ -76,7 +76,7 @@ jobs:
             wasm-tools-${{ github.ref_name }}-${{ matrix.arch }}-linux
 
       - name: upload-artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wasm-tools-${{ github.ref_name }}-${{ matrix.arch }}-linux
           path: wasm-tools-${{ github.ref_name }}-${{ matrix.arch }}-linux.tar.zst
@@ -95,7 +95,7 @@ jobs:
       MACOSX_DEPLOYMENT_TARGET: "11.0"
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: install-deps
         run: |
@@ -121,7 +121,7 @@ jobs:
             wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}
 
       - name: upload-artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}
           path: wasm-tools-${{ github.ref_name }}-darwin-${{ matrix.arch }}.tar.zst
