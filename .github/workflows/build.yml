@@ -44,14 +44,14 @@ jobs:
 
           MIMALLOC_VERBOSE=1 ./bin/wasm-component-ld --help
           MIMALLOC_VERBOSE=1 ./bin/wasm-tools --version
-          MIMALLOC_VERBOSE=1 ./bin/wasmi_cli --version
+          MIMALLOC_VERBOSE=1 ./bin/wasmi --version
           MIMALLOC_VERBOSE=1 ./bin/wasmtime --version
           MIMALLOC_VERBOSE=1 ./bin/wit-bindgen --version
           MIMALLOC_VERBOSE=1 ./bin/wizer --version
 
           file ./bin/wasm-component-ld
           file ./bin/wasm-tools
-          file ./bin/wasmi_cli
+          file ./bin/wasmi
           file ./bin/wasmtime
           file ./bin/wit-bindgen
           file ./bin/wizer
@@ -96,7 +96,7 @@ jobs:
 
           file ./bin/wasm-component-ld
           file ./bin/wasm-tools
-          file ./bin/wasmi_cli
+          file ./bin/wasmi
           file ./bin/wasmtime
           file ./bin/wit-bindgen
           file ./bin/wizer
